@@ -18,7 +18,7 @@ CraftLearn is a decentralized learning platform that teaches various crafts and 
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/Craft-learn/Frontend.git
-   cd craft-learn
+   cd Frontend
    ```
 2. **Install dependencies:**
    ```bash
