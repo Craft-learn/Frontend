@@ -11,11 +11,13 @@ import DashboardLayout from "./components/DashboardLayout";
 import CertificateCard from "./pages/Download";
 import Certificate from "./pages/Certificates";
 import CoursesPage from "./pages/Courses";
+import { Toaster } from "sonner";
 
 
 function App() {
   return (
     <div>
+        <Toaster />
         <ContextProvider>
           <ToastContainer />
           <Router>

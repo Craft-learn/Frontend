@@ -5,14 +5,20 @@ import { useState } from "react";
 import Button from "../Button";
 import AnimatedDiv from "../AnimatedDiv";
 import { useNavigate } from "react-router";
-import { useStoreIPFS } from "../../utils/store";
-import IPFS from "../../hooks/useIPFS";
+import { useAccount } from "wagmi";
+// import { useEthersProvider } from "../../hooks/useEthersProvider";
+import { readOnlyProvider } from "../../constants/providers";
+import { getCraftLearnCredentialContract } from "../../constants/contract";
+import ConnectWallet from "../ConnectWallet";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const navigate = useNavigate();
-  const { ipfsUrl } = useStoreIPFS();
-  const { fetchFromIPFS } = IPFS();
+  // const chainId = useChainId();
+  // const provider = useEthersProvider({ chainId });
+  const { address, isConnected } = useAccount();
+  const provider = readOnlyProvider;
+  // const signer = provider2.getSigner();
 
   // Menu items array
   const menuItems = [
@@ -22,40 +28,32 @@ const Header = () => {
     { href: "#testimonials", label: "Testimonials" },
     { href: "#FAQS", label: "FAQs" },
   ];
-
-  console.log("IPFS URL: ", ipfsUrl);
   
   const handleClick = async () => {
-    const fetchedDetail = await fetchFromIPFS(ipfsUrl);
-    let validUrl = false;
+    if (!provider) {
+      throw new Error("Provider not initialized");
+    }
     
     try {
-      JSON.parse(fetchedDetail);
-      validUrl = true;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch(error) {
-      validUrl = false;
-    }
-    if (validUrl) {
-      if (JSON.parse(fetchedDetail).username) {
+      const contract = getCraftLearnCredentialContract(provider);
+      if (!contract) {
+        throw new Error("Failed to get contract instance");
+      }
+
+      const estimatedGas = await contract.isStudent.estimateGas(address);
+      const gasLimit = BigInt(estimatedGas) * BigInt(12) / BigInt(10);
+      const isStudent = await contract?.isStudent(address, {
+        gasLimit,
+      });
+      console.log("Is Student: ", isStudent);
+      if (isStudent) {
         navigate("/dashboard");
       } else {
         navigate("/signup");
       }
-    } else {
-      navigate("/signup");
+    } catch(error) {
+      console.error("Error fetching student status: ", error);
     }
-    // try {
-    //   console.log("Fetched detail: ", fetchedDetail);
-    //   console.log("Fetched detail username: ", JSON.parse(fetchedDetail).username);
-    //   if (fetchedDetail && JSON.parse(fetchedDetail).username) {
-    //     navigate("/dashboard");
-    //   } else {
-    //     navigate("/signup");
-    //   }
-    // } catch {
-    //   console.log("Error fetching data from IPFS");
-    // }
   };
 
   const toggleMenu = () => {
@@ -79,7 +77,7 @@ const Header = () => {
         </div>
 
         <div className="hidden lg:flex">
-          <Button onClick={handleClick} text="Start Learning" />
+          {isConnected ? <Button onClick={handleClick} text="Get Started" /> :  <ConnectWallet />}
         </div>
 
         <div className="flex lg:hidden">

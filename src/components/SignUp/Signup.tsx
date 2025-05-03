@@ -7,11 +7,15 @@ import {useState} from "react"
 import IPFS from "../../hooks/useIPFS";
 import { useNavigate } from "react-router";
 import { useAccount } from "wagmi";
+import { useEthersSigner } from "../../hooks/useEthersSigner";
+import { getCraftLearnCredentialContract } from "../../constants/contract";
+import { toast } from "sonner";
 
 export default function Register() {
   const [username, setUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [privacyChecked, setPrivacyChecked] = useState<boolean>(false);
+  const signer = useEthersSigner();
 
   const { address } = useAccount();
   const navigate = useNavigate(); 
@@ -36,6 +40,18 @@ export default function Register() {
       };
       const url = await uploadToIPFS(JSON.stringify(data));
       console.log("IPFS Url: ", url);
+
+      const contract = signer ? getCraftLearnCredentialContract(signer) : undefined;
+      const estimatedGas = contract ? await contract?.registerStudents.estimateGas([address]) : 0;
+      const gasLimit = BigInt(estimatedGas) * BigInt(12) / BigInt(10);
+
+      const tx = await contract?.registerStudents([address], {
+        gasLimit: gasLimit,
+      });
+
+      toast.message("Please wait while we process your transaction.");
+      await tx.wait();
+      toast.success("Account created successfully!");
 
       navigate("/dashboard");
     } catch (error) {

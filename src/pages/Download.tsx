@@ -3,20 +3,18 @@ import { useEthersSigner } from "../hooks/useEthersSigner";
 import { useStoreIPFS } from "../utils/store";
 import IPFS from "../hooks/useIPFS";
 import { getCraftLearnCredentialContract } from "../constants/contract";
-import { useAccount } from "wagmi";
+import { toast } from "sonner";
 
 const CertificateCard = () => {
-  const signer = useEthersSigner({ chainId: 656476 });
+  const signer = useEthersSigner();
   const { ipfsUrl } = useStoreIPFS();
   const { fetchFromIPFS } = IPFS();
-  const { address } = useAccount();
 
   const handleMint = async () => {
     const fetchedDetail = await fetchFromIPFS(ipfsUrl);
     const userDetail = JSON.parse(fetchedDetail);
 
     const courseName = "Bead Making Mastery Course";
-    const learnerID = `${userDetail.username}.edu`;
     const tokenURI =
       "https://aquamarine-famous-penguin-727.mypinata.cloud/ipfs/QmUr6JWDGMkwk9pnb9bQvWrG5wfzp4cLDokPfzfeC5YGLK";
     const learnerName = userDetail.username;
@@ -26,21 +24,26 @@ const CertificateCard = () => {
         ? getCraftLearnCredentialContract(signer)
         : undefined;
       if (contract) {
-        console.log(
-          "Minting certificate...",
-          address,
+        console.log("Minting certificate...");
+        const estimatedGas = await contract.mintCredential.estimateGas(
           courseName,
-          learnerID,
           tokenURI,
           learnerName
         );
-        await contract.mintCredential(
-          address,
+        const gasLimit = BigInt(estimatedGas) * BigInt(12) / BigInt(10);
+        const tx = await contract.mintCredential(
           courseName,
-          learnerID,
           tokenURI,
-          learnerName
+          learnerName,
+          {
+            gasLimit: gasLimit,
+          }
         );
+
+        toast.message("Please wait while we process your transaction.");
+
+        await tx.wait();
+        toast.success("Certificate minted successfully!");
       }
     } catch (error) {
       console.error("Error minting certificate: ", error);
