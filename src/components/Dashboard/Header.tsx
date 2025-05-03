@@ -20,7 +20,7 @@ export default function Header({ ...props }: Props) {
       <div className="container-xs mt-4 flex lg:px-5 md:px-5">
         <div className="flex w-full items-center justify-between gap-5 ">
           <div className="flex gap-10 md:w-full max-sm:flex-col">
-            <Link to={links.register}>
+            <Link to={links.home}>
               <Img
                 src="logo.png"
                 alt="Headerlogo"

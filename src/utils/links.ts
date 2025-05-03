@@ -1,4 +1,5 @@
 export const links = {
+  home: "/",
   register: "/signup",
   dashboard: "/dashboard",
   verifyEmail: "/verifyEmail",

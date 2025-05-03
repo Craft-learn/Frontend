@@ -24,7 +24,7 @@ const CertificateCard = () => {
         ? getCraftLearnCredentialContract(signer)
         : undefined;
       if (contract) {
-        console.log("Minting certificate...");
+        toast.message("Please wait while we process your transaction.");
         const estimatedGas = await contract.mintCredential.estimateGas(
           courseName,
           tokenURI,
